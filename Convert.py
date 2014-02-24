@@ -8,8 +8,13 @@ import argparse
 # Arguments: from, to
 # From: 2000/2003, XP, VX
 # To: XP, VX
+# Optional: GTBS
 
-# Only 2000/2003
+# For XP, GTBS simply matched database enemy graphic with charset by name; no need for the charset to be imported to
+# battlers, too
+#
+# VX just does it the same way as VX Ace; in battlers, battler (icon) and $battler (charset). In charsets, $charset
+# OR, optionally for actors, just a full copy of the charset in battlers.
 
 parser = argparse.ArgumentParser(description='Converts charset resources from one RPG Maker format to another; '
                                              'optionally produces GTBS-format resources.')
@@ -31,14 +36,17 @@ format_from = args.f.lower
 format_to = args.t.lower
 problem = False
 
-# Creates folder for characters if folder does not already exist
 p = os.path.dirname(os.path.abspath(__file__))
-if not os.path.exists(os.path.join(p, "Characters")):
-    os.makedirs(os.path.join(p, "Characters"))
+charset_path = os.path.join(p, "Characters")
+battlers_path = os.path.join(p, "Battlers")
+
+# Creates folder for characters if folder does not already exist
+if not os.path.exists(charset_path):
+    os.makedirs(charset_path)
 # If generating resources for GTBS, also generates folder for battlers.
 if args.gtbs:
-    if not os.path.exists(os.path.join(p, "Battlers")):
-        os.makedirs(os.path.join(p, "Battlers"))
+    if not os.path.exists(battlers_path):
+        os.makedirs(battlers_path)
 
 if format_from not in valid_format_from:
     print "Invalid argument: 'from' must be 2000, XP or VX"
@@ -52,28 +60,10 @@ if not os.path.exists(path):
     print "Invalid argument: 'path' must be a valid path"
     problem = True
 
-def convert(t, f, image, gtbs=False):
-    file, ext = os.path.splitext(image)
 
-    im = Image.open(image)
-    width, height = im.size
-    converted = Image.new('RGB', (width, height))
-
-if not problem:
-    for infile in glob.glob(os.path.join(path, "*.png")):
-        convert(format_from, format_to, infile, args.gtbs)
-    if format_from == '2000':
-        for infile in glob.glob(os.path.join(path, "*.bmp")):
-            convert(format_from, format_to, infile, args.gtbs)
-    if format_from == 'xp' or format_from == 'vx':
-        for infile in glob.glob(os.path.join(path, "*.jpg")):
-            convert(format_from, format_to, infile, args.gtbs)
-
-
-def split_eight(charset):
+def split_eight(charset, width, height):
     single_width = width/4
     single_height = height/2
-    icon_width
 
     for y in range(0,2):
         for x in range(0,4):
@@ -87,17 +77,56 @@ def split_eight(charset):
     return charsets
 
 
-def generate_icon(charset, single_width, single_height):
+def generate_icon(charset, single_width, single_height, t):
     # takes a single character's charset (AFTER processing to target format) and generates an icon for use with GTBS
-    if args.t is 'XP':
+    if t is 'XP':
         icon_width = single_width/4
     else:
         icon_width = single_width/3
     icon_height = single_height/2
 
-    icon = charset.crop((icon_width,0,icon_width*2,icon_height))
+    icon = charset.crop((icon_width, 0, icon_width*2, icon_height))
 
     return icon
+
+
+def convert(t, f, image, gtbs=False):
+    file, ext = os.path.splitext(image)
+
+    im = Image.open(image)
+    width, height = im.size
+
+    if f is 'XP':
+        if t is not 'XP':
+            # XP charsets are always a single character with sixteen poses, but none of the target formats other than XP
+            # have more than three poses in any given direction
+            converted = Image.new('RGB', (width-(width/4), height))
+        else:
+            # Converting from XP to XP - user just wants to make GTBS graphics?
+            converted = Image.new('RGB', (width, height))
+    elif f is 'VX':
+        if file[:1] is '$':
+            # image is already only a single character, so there's no need to split it
+            converted = Image.new('RGB',(width+(width/3),height))
+
+    converted = Image.new('RGB', (width, height))
+
+    # split image into 4x2 charsets if 2000/2003 format or VX format and not single-charset
+    if f == '2000':
+        charsets = split_eight(im, width, height)
+    elif f == 'vx' and file[:1] is not '$':
+        charsets = split_eight(im, width, height)
+
+
+if not problem:
+    for infile in glob.glob(os.path.join(path, "*.png")):
+        convert(format_from, format_to, infile, args.gtbs)
+    if format_from == '2000':
+        for infile in glob.glob(os.path.join(path, "*.bmp")):
+            convert(format_from, format_to, infile, args.gtbs)
+    if format_from == 'xp' or format_from == 'vx':
+        for infile in glob.glob(os.path.join(path, "*.jpg")):
+            convert(format_from, format_to, infile, args.gtbs)
 
 
 # def convert_2000_to_vx():
