@@ -96,26 +96,28 @@ def convert(t, f, image, gtbs=False):
     im = Image.open(image)
     width, height = im.size
 
-    if f is 'XP':
-        if t is not 'XP':
-            # XP charsets are always a single character with sixteen poses, but none of the target formats other than XP
-            # have more than three poses in any given direction
-            converted = Image.new('RGB', (width-(width/4), height))
-        else:
-            # Converting from XP to XP - user just wants to make GTBS graphics?
-            converted = Image.new('RGB', (width, height))
-    elif f is 'VX':
-        if file[:1] is '$':
-            # image is already only a single character, so there's no need to split it
-            converted = Image.new('RGB',(width+(width/3),height))
-
-    converted = Image.new('RGB', (width, height))
-
-    # split image into 4x2 charsets if 2000/2003 format or VX format and not single-charset
-    if f == '2000':
-        charsets = split_eight(im, width, height)
-    elif f == 'vx' and file[:1] is not '$':
-        charsets = split_eight(im, width, height)
+    # if f == 'XP':
+    #     if t != 'XP':
+    #         # XP charsets are always a single character with sixteen poses, but none of the target formats other than XP
+    #         # have more than three poses in any given direction
+    #         converted = Image.new('RGB', (width-(width/4), height))
+    #     else:
+    #         # Converting from XP to XP - user just wants to make GTBS graphics?
+    #         converted = Image.new('RGB', (width, height))
+    # else:
+    #     converted = Image.new('RGB', (width, height))
+    #
+    # # check target first? If converting TO XP, will need to add another column of poses
+    # # Otherwise, if
+    #
+    #
+    # converted = Image.new('RGB', (width, height))
+    #
+    # # split image into 4x2 charsets if 2000/2003 format or VX format and not single-charset
+    # if f == '2000':
+    #     charsets = split_eight(im, width, height)
+    # elif f == 'vx' and file[:1] is not '$':
+    #     charsets = split_eight(im, width, height)
 
 
 if not problem:
