@@ -1,6 +1,10 @@
+#! python2.7
+
 # Feldherren's shiny handy script for converting RM2000 format charsets to VX Ace format.
 # It even converts them so they're easily usable with GTBS!
 # Just drop this in the directory containing RM2000 format charsets and run it. It'll do all the work.
+
+# Note: requires python 2.7 and the Python Imaging Library (PIL)
 
 from PIL import Image
 import os, glob
